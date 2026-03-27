@@ -84,9 +84,18 @@ export const EventProvider = ({ children }) => {
       let needsSync = false;
 
       events.forEach(event => {
-        // Assume time is "HH:mm - HH:mm" or just "HH:mm"
-        const startTime = event.time.split(' - ')[0] || '00:00';
-        const eventDate = new Date(`${event.date}T${startTime}`);
+        // Assume time is "HH:mm - HH:mm" or "HH.mm - HH.mm"
+        const startTime = (event.time.split(' - ')[0] || '00:00').replace(/\./g, ':');
+        let eventDate = new Date(`${event.date}T${startTime}`);
+        
+        // Fallback for invalid date
+        if (isNaN(eventDate.getTime())) {
+          const [hours, minutes] = startTime.split(':');
+          eventDate = new Date(event.date);
+          eventDate.setHours(parseInt(hours || 0, 10));
+          eventDate.setMinutes(parseInt(minutes || 0, 10));
+          eventDate.setSeconds(0);
+        }
         
         if (eventDate < now) {
           toArchive.push(event);

@@ -10,7 +10,18 @@ const EventCard = ({ event, onClick }) => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const eventDate = new Date(`${event.date}T${event.time.split(' - ')[0] || '00:00'}`);
+      const timeString = (event.time.split(' - ')[0] || '00:00').replace(/\./g, ':');
+      let eventDate = new Date(`${event.date}T${timeString}`);
+      
+      // Fallback if Date is still invalid (e.g., Safari might have issues with some formats)
+      if (isNaN(eventDate.getTime())) {
+         const [hours, minutes] = timeString.split(':');
+         eventDate = new Date(event.date);
+         eventDate.setHours(parseInt(hours || 0, 10));
+         eventDate.setMinutes(parseInt(minutes || 0, 10));
+         eventDate.setSeconds(0);
+      }
+      
       const now = new Date();
       const diff = eventDate - now;
 

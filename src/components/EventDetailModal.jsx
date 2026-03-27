@@ -13,7 +13,18 @@ const EventDetailModal = ({ isOpen, event, onClose }) => {
       setParticipants(getEventParticipants(event.id));
       
       const timer = setInterval(() => {
-        const eventDate = new Date(`${event.date}T${event.time.split(' - ')[0] || '00:00'}`);
+        const timeString = (event.time.split(' - ')[0] || '00:00').replace(/\./g, ':');
+        let eventDate = new Date(`${event.date}T${timeString}`);
+        
+        // Fallback for invalid date
+        if (isNaN(eventDate.getTime())) {
+          const [hours, minutes] = timeString.split(':');
+          eventDate = new Date(event.date);
+          eventDate.setHours(parseInt(hours || 0, 10));
+          eventDate.setMinutes(parseInt(minutes || 0, 10));
+          eventDate.setSeconds(0);
+        }
+
         const now = new Date();
         const diff = eventDate - now;
 
@@ -21,11 +32,11 @@ const EventDetailModal = ({ isOpen, event, onClose }) => {
           setTimeLeft('Sedang Berlangsung / Selesai');
           clearInterval(timer);
         } else {
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-          const mins = Math.floor((diff / 1000 / 60) % 60);
-          const secs = Math.floor((diff / 1000) % 60);
-          setTimeLeft(`${days}h ${hours}j ${mins}m ${secs}d`);
+          const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const m = Math.floor((diff / 1000 / 60) % 60);
+          const s = Math.floor((diff / 1000) % 60);
+          setTimeLeft(`${d > 0 ? d + 'd ' : ''}${h}h ${m}m ${s}s`);
         }
       }, 1000);
 
